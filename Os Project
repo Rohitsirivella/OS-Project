@@ -1,0 +1,248 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<pthread.h>
+#include<string.h>
+#define MIN_PID 100 
+#define MAX_PID 1000
+int start,len;
+struct Process_id
+{
+	int pid;
+	int bitmap;
+}pidArr[1000];
+int id;
+int allocate_map(void)
+{
+	X:
+	printf("\nHow Many Process Id U Want To Generate (Range [1 - 1000]) : ");
+	scanf("%d",&id);
+	if(id>1000 && id<1)
+	{
+		printf("\nInvlaid Number of Process Id..\nTry Again..\n\n");
+		goto X;
+	}
+	int i,j=0;
+	printf("\n\t########################################");
+	printf("\n\t##     PID      ##     Allocation     ##");
+	printf("\n\t########################################");
+	
+	for(i=MIN_PID;i<MAX_PID;i++)
+	{
+		pidArr[j].pid=i;
+		pidArr[j].bitmap=0;
+		printf("\n\t##    \t%d\t##         %d          ##",pidArr[j].pid,pidArr[j].bitmap);		
+		usleep(100*1000);
+		if(j==id)
+		{
+			break;
+		}
+		j++;
+	}
+
+	printf("\n\t########################################");
+	
+	if(i==MIN_PID+id)
+	{
+		printf("\n\t##                                    ##");
+		printf("\n\t##   Succesfully Created Process..    ##");
+		printf("\n\t##                                    ##");
+		printf("\n\t########################################");		
+		return 1;
+	}
+	else
+	{
+		printf("\n\t##                                    ##");
+		printf("\n\t##  Unsuccesfull on Creating Process. ##");
+		printf("\n\t##                                    ##");
+		printf("\n\t########################################");
+		return -1;
+		
+	}
+}
+
+int allocate_pid()
+{
+	int i,j=0;
+	Y:
+	printf("\nEnter Starting Process Id And Length to Allocate Pid : ");
+	scanf("%d %d",&start,&len);
+	if(start<100 && (start+len)>1000 && len==0)
+	{
+		printf("\nInvalid Detail To Allocate Pid.");
+		goto Y;
+	}
+	printf("\n\t########################################");
+	printf("\n\t##     PID      ##     Allocation     ##");
+	printf("\n\t########################################");
+	j=start-100;	
+	int count=0;
+	for(i=start;i<(start+len);i++)
+	{
+		if(pidArr[j].bitmap==0)
+		{
+			pidArr[j].bitmap=1;	
+			printf("\n\t##    \t%d\t##         %d          ##",pidArr[j].pid,pidArr[j].bitmap);		
+			usleep(100*1000);
+			count++;
+			
+		}
+		else
+		{
+			printf("\nUnsuccesful On Allocating.");
+			break;
+		}
+		j++;
+	}
+	printf("\n\t########################################");
+	if(count==len)
+	{
+		printf("\n\t##                                    ##");
+		printf("\n\t##        Succesfull Allocated.       ##");
+		printf("\n\t##                                    ##");
+		printf("\n\t########################################");
+		return 1;
+	}
+	else
+	{
+		printf("\n\t##                                    ##");
+		printf("\n\t##     Unsuccesfull on Allocating.    ##");
+		printf("\n\t##                                    ##");
+		printf("\n\t########################################");
+		return -1;
+	}
+}
+
+int release_pid(int rpid)
+{
+	int i,j=0;
+	for(i=MIN_PID;i<MAX_PID;i++)
+	{
+		if(pidArr[j].pid==rpid)
+		{
+			if(pidArr[j].bitmap==0)
+			{
+				printf("\nProcess Id Already Free.");
+				break;
+			}
+			pidArr[j].bitmap=0;
+			printf("\nReleased Succesfully...");
+			printf("\n###################################################\n");
+		printf("\n#####  PROCESS  ####  ALLOCATION  #####\n");
+		printf("\n#####  %d   #####   %d  #####\n",pidArr[j].pid,pidArr[j].bitmap);
+		printf("\n###################################################\n");
+			return 0;
+		}
+		j++;
+	}
+	if(i==MAX_PID)
+	{
+		printf("\nProcess Id Not Found...\n");
+		return -1;
+	}
+}
+
+
+void * Multi_Thread()
+{
+	allocate_map();
+	X:
+	allocate_pid();
+	int opt;	
+	int rpid;
+	printf("\n\tWant To Release Process [Yes : 1 /No : 0] : ");
+	scanf("%d",&opt);
+	if(opt==1)
+	{	
+		printf("\n\tEnter Process Id : ");
+		scanf("%d",&rpid);
+		release_pid(rpid);	
+	}
+	else if(opt==0)
+	{
+		return 0;
+	}
+	else
+	{
+		printf("\nInvalid Option.");
+		goto X;
+	}
+	
+	
+}
+
+int main()
+{
+	
+	int c;
+	printf("\nEnter Number Of Thread U Want To Create : ");
+	scanf("%d",&c);
+	pthread_t thread[c];
+	sleep(3);
+	int i;
+	for(i=0;i<c;i++)
+	{
+		pthread_create(&thread[i],NULL,Multi_Thread,NULL);
+		sleep(1);
+		pthread_join(thread[i],NULL);
+	}
+	int j;
+	for(j=0;j<c;j++)
+	{
+		pthread_join(thread[j],NULL);
+		sleep(1);
+	}
+	allocate_map();
+	X:
+	allocate_pid();
+	int opt;	
+	int rpid;
+	printf("\n\tWant To Release Process [Yes : 1 /No : 0] : ");
+	scanf("%d",&opt);
+	if(opt==1)
+	{	
+		int c;
+		printf("\n\tEnter Process Id : ");
+		scanf("%d",&rpid);
+		release_pid(rpid);
+		G:
+		printf("\n\tWant To See The Current Process [Yes : 1 /No : 0] : ");
+		scanf("%d",&c);
+		if(c==1)
+		{
+			printf("\n\t########################################");
+			printf("\n\t##     PID      ##     Allocation     ##");
+			printf("\n\t########################################");
+			int i;
+			for(i=start;i<(start+len);i++)
+			{
+			printf("\n\t########################################");
+			printf("\n\t##    \t%d\t##         %d          ##",pidArr[i].pid,pidArr[i].bitmap);	
+			printf("\n\t########################################");	
+			usleep(100*1000);
+			}	
+			printf("\n\t########################################");
+		}
+		else if(c==0)
+		{
+		
+			return 0;
+		}	
+		else 
+		{
+			printf("\n\tInvalid Option.");
+			goto G;	
+		}
+	}
+	else if(opt==0)
+	{
+		return 0;
+	}
+	else
+	{
+		printf("\nInvalid Option.");
+		goto X;
+	}	
+	return 0;
+}
